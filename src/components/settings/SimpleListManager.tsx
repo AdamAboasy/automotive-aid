@@ -27,12 +27,9 @@ export function SimpleListManager({ table, label, withLocation }: Props) {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from(table)
-      .select(withLocation ? "id, name, location" : "id, name")
-      .order("name");
+    const { data, error } = await supabase.from(table).select("*").order("name");
     if (error) toast.error(error.message);
-    setRows((data as Row[]) ?? []);
+    setRows(((data as unknown) as Row[]) ?? []);
     setLoading(false);
   };
 
