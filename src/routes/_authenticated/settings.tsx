@@ -14,6 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { SimpleListManager } from "@/components/settings/SimpleListManager";
+import { BrandsModelsManager } from "@/components/settings/BrandsModelsManager";
+import { EmployeesManager } from "@/components/settings/EmployeesManager";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "الإعدادات — توكيل السيارات" }] }),
@@ -31,6 +35,46 @@ interface UserRow {
 }
 
 function SettingsPage() {
+  return (
+    <div className="space-y-6">
+      <Card className="p-6">
+        <div className="flex items-center gap-3">
+          <div className="bg-primary/15 text-primary p-3 rounded-xl">
+            <SettingsIcon className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">الإعدادات</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              إدارة المستخدمين والقوائم المرجعية للنظام.
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      <Tabs defaultValue="users" className="space-y-4">
+        <TabsList className="flex flex-wrap h-auto">
+          <TabsTrigger value="users">المستخدمون</TabsTrigger>
+          <TabsTrigger value="brands">الماركات والموديلات</TabsTrigger>
+          <TabsTrigger value="banks">البنوك</TabsTrigger>
+          <TabsTrigger value="body_types">أنواع الهياكل</TabsTrigger>
+          <TabsTrigger value="warehouses">المخازن</TabsTrigger>
+          <TabsTrigger value="workshops">الورش</TabsTrigger>
+          <TabsTrigger value="employees">الموظفون</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="users"><Card className="p-6"><UsersAndRoles /></Card></TabsContent>
+        <TabsContent value="brands"><Card className="p-6"><BrandsModelsManager /></Card></TabsContent>
+        <TabsContent value="banks"><Card className="p-6"><SimpleListManager table="banks" label="البنك" /></Card></TabsContent>
+        <TabsContent value="body_types"><Card className="p-6"><SimpleListManager table="body_types" label="نوع الهيكل" /></Card></TabsContent>
+        <TabsContent value="warehouses"><Card className="p-6"><SimpleListManager table="warehouses" label="المخزن" withLocation /></Card></TabsContent>
+        <TabsContent value="workshops"><Card className="p-6"><SimpleListManager table="workshops" label="الورشة" withLocation /></Card></TabsContent>
+        <TabsContent value="employees"><Card className="p-6"><EmployeesManager /></Card></TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function UsersAndRoles() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,16 +109,11 @@ function SettingsPage() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   const addRole = async (userId: string, role: AppRole) => {
     const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) return toast.error(error.message);
     toast.success("تمت إضافة الدور");
     load();
   };
@@ -85,48 +124,29 @@ function SettingsPage() {
       .delete()
       .eq("user_id", userId)
       .eq("role", role);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) return toast.error(error.message);
     toast.success("تم حذف الدور");
     load();
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="p-6">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/15 text-primary p-3 rounded-xl">
-            <SettingsIcon className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">الإعدادات</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              إدارة المستخدمين والأدوار. باقي القوائم المرجعية (البنوك، الماركات، الموديلات...) هتتنقل لقاعدة البيانات في المرحلة القادمة.
-            </p>
-          </div>
-        </div>
-      </Card>
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <UserCog className="w-5 h-5 text-primary" />
+        <h2 className="text-lg font-bold">المستخدمون والأدوار</h2>
+      </div>
 
-      <Card className="p-6 space-y-4">
-        <div className="flex items-center gap-2">
-          <UserCog className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold">المستخدمون والأدوار</h2>
+      {loading ? (
+        <div className="text-center text-muted-foreground py-6">جاري التحميل...</div>
+      ) : users.length === 0 ? (
+        <div className="text-center text-muted-foreground py-6">لا يوجد مستخدمون</div>
+      ) : (
+        <div className="space-y-3">
+          {users.map((u) => (
+            <UserRoleRow key={u.id} user={u} onAdd={addRole} onRemove={removeRole} />
+          ))}
         </div>
-
-        {loading ? (
-          <div className="text-center text-muted-foreground py-6">جاري التحميل...</div>
-        ) : users.length === 0 ? (
-          <div className="text-center text-muted-foreground py-6">لا يوجد مستخدمون</div>
-        ) : (
-          <div className="space-y-3">
-            {users.map((u) => (
-              <UserRoleRow key={u.id} user={u} onAdd={addRole} onRemove={removeRole} />
-            ))}
-          </div>
-        )}
-      </Card>
+      )}
     </div>
   );
 }
