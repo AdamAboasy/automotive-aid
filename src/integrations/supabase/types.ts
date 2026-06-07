@@ -77,6 +77,218 @@ export type Database = {
         }
         Relationships: []
       }
+      cars: {
+        Row: {
+          body_type_id: string | null
+          brand_id: string | null
+          client_id: string
+          color: string | null
+          created_at: string
+          engine_id: string | null
+          id: string
+          mileage: number | null
+          model_id: string | null
+          notes: string | null
+          plate_number: string | null
+          updated_at: string
+          vin: string | null
+          year: number | null
+        }
+        Insert: {
+          body_type_id?: string | null
+          brand_id?: string | null
+          client_id: string
+          color?: string | null
+          created_at?: string
+          engine_id?: string | null
+          id?: string
+          mileage?: number | null
+          model_id?: string | null
+          notes?: string | null
+          plate_number?: string | null
+          updated_at?: string
+          vin?: string | null
+          year?: number | null
+        }
+        Update: {
+          body_type_id?: string | null
+          brand_id?: string | null
+          client_id?: string
+          color?: string | null
+          created_at?: string
+          engine_id?: string | null
+          id?: string
+          mileage?: number | null
+          model_id?: string | null
+          notes?: string | null
+          plate_number?: string | null
+          updated_at?: string
+          vin?: string | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cars_body_type_id_fkey"
+            columns: ["body_type_id"]
+            isOneToOne: false
+            referencedRelation: "body_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cars_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cars_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cars_engine_id_fkey"
+            columns: ["engine_id"]
+            isOneToOne: false
+            referencedRelation: "engines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cars_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_followups: {
+        Row: {
+          client_id: string
+          created_at: string
+          done: boolean
+          followup_type: string
+          id: string
+          notes: string | null
+          scheduled_at: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          done?: boolean
+          followup_type: string
+          id?: string
+          notes?: string | null
+          scheduled_at: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          done?: boolean
+          followup_type?: string
+          id?: string
+          notes?: string | null
+          scheduled_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_followups_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          name: string
+          national_id: string | null
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          national_id?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          national_id?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      complaints: {
+        Row: {
+          car_id: string | null
+          client_id: string
+          created_at: string
+          description: string | null
+          id: string
+          priority: Database["public"]["Enums"]["complaint_priority"]
+          status: Database["public"]["Enums"]["complaint_status"]
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          car_id?: string | null
+          client_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["complaint_priority"]
+          status?: Database["public"]["Enums"]["complaint_status"]
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          car_id?: string | null
+          client_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["complaint_priority"]
+          status?: Database["public"]["Enums"]["complaint_status"]
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complaints_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "cars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "complaints_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           created_at: string
@@ -152,6 +364,144 @@ export type Database = {
             columns: ["model_id"]
             isOneToOne: false
             referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory: {
+        Row: {
+          brand_id: string | null
+          color: string | null
+          created_at: string
+          engine_id: string | null
+          id: string
+          model_id: string | null
+          notes: string | null
+          price: number | null
+          status: Database["public"]["Enums"]["inventory_status"]
+          updated_at: string
+          vin: string | null
+          warehouse_id: string | null
+          year: number | null
+        }
+        Insert: {
+          brand_id?: string | null
+          color?: string | null
+          created_at?: string
+          engine_id?: string | null
+          id?: string
+          model_id?: string | null
+          notes?: string | null
+          price?: number | null
+          status?: Database["public"]["Enums"]["inventory_status"]
+          updated_at?: string
+          vin?: string | null
+          warehouse_id?: string | null
+          year?: number | null
+        }
+        Update: {
+          brand_id?: string | null
+          color?: string | null
+          created_at?: string
+          engine_id?: string | null
+          id?: string
+          model_id?: string | null
+          notes?: string | null
+          price?: number | null
+          status?: Database["public"]["Enums"]["inventory_status"]
+          updated_at?: string
+          vin?: string | null
+          warehouse_id?: string | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_engine_id_fkey"
+            columns: ["engine_id"]
+            isOneToOne: false
+            referencedRelation: "engines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_bookings: {
+        Row: {
+          car_id: string | null
+          client_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          scheduled_at: string
+          service_type: string | null
+          status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
+          workshop_id: string | null
+        }
+        Insert: {
+          car_id?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          scheduled_at: string
+          service_type?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+          workshop_id?: string | null
+        }
+        Update: {
+          car_id?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          scheduled_at?: string
+          service_type?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+          workshop_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_bookings_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "cars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_bookings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_bookings_workshop_id_fkey"
+            columns: ["workshop_id"]
+            isOneToOne: false
+            referencedRelation: "workshops"
             referencedColumns: ["id"]
           },
         ]
@@ -293,6 +643,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "reception" | "workshop_manager" | "technician" | "hr"
+      booking_status:
+        | "pending"
+        | "confirmed"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
+      complaint_priority: "low" | "medium" | "high" | "urgent"
+      complaint_status: "open" | "in_review" | "resolved" | "closed"
+      inventory_status: "available" | "reserved" | "sold"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -421,6 +780,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "reception", "workshop_manager", "technician", "hr"],
+      booking_status: [
+        "pending",
+        "confirmed",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ],
+      complaint_priority: ["low", "medium", "high", "urgent"],
+      complaint_status: ["open", "in_review", "resolved", "closed"],
+      inventory_status: ["available", "reserved", "sold"],
     },
   },
 } as const
