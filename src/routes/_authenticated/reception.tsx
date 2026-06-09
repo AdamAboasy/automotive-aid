@@ -8,7 +8,6 @@ import { CarsManager } from "@/components/reception/CarsManager";
 import { BookingsManager } from "@/components/reception/BookingsManager";
 import { ComplaintsManager } from "@/components/reception/ComplaintsManager";
 import { FollowupsManager } from "@/components/reception/FollowupsManager";
-import { InventoryManager } from "@/components/reception/InventoryManager";
 
 export const Route = createFileRoute("/_authenticated/reception")({
   head: () => ({ meta: [{ title: "خدمة العملاء — توكيل السيارات" }] }),
@@ -30,7 +29,7 @@ function ReceptionPage() {
           <div>
             <h1 className="text-2xl font-bold">خدمة العملاء والاستقبال</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              العملاء، السيارات، الحجوزات، المخزون، الشكاوى، والمتابعة.
+              العملاء، السيارات، الحجوزات، الشكاوى، والمتابعة.
             </p>
           </div>
         </div>
@@ -43,7 +42,6 @@ function ReceptionPage() {
           <TabsTrigger value="bookings">حجوزات الصيانة</TabsTrigger>
           <TabsTrigger value="complaints">الشكاوى</TabsTrigger>
           <TabsTrigger value="followups">المتابعة</TabsTrigger>
-          <TabsTrigger value="inventory">المخزون</TabsTrigger>
         </TabsList>
 
         <TabsContent value="clients"><Card className="p-6"><ClientsManager /></Card></TabsContent>
@@ -51,7 +49,6 @@ function ReceptionPage() {
         <TabsContent value="bookings"><Card className="p-6"><BookingsManager /></Card></TabsContent>
         <TabsContent value="complaints"><Card className="p-6"><ComplaintsManager /></Card></TabsContent>
         <TabsContent value="followups"><Card className="p-6"><FollowupsManager /></Card></TabsContent>
-        <TabsContent value="inventory"><Card className="p-6"><InventoryManager /></Card></TabsContent>
       </Tabs>
     </div>
   );
