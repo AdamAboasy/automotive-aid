@@ -156,7 +156,7 @@ export function SparePartsManager() {
       ) : filtered.length === 0 ? (
         <div className="text-center text-muted-foreground py-6">لا توجد قطع غيار</div>
       ) : (
-        <div class Name="grid gap-2">
+        <div className="grid gap-2">
           {filtered.map((p) => {
             const low = Number(p.quantity) <= Number(p.min_quantity);
             return (
