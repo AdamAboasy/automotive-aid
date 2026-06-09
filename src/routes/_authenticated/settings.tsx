@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { RoleGate } from "@/components/RoleGate";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Settings as SettingsIcon, UserCog, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Settings as SettingsIcon, UserCog, Trash2, Plus, UserX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ALL_ROLES, ROLE_LABELS, type AppRole } from "@/lib/roles";
 import { toast } from "sonner";
@@ -14,10 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SimpleListManager } from "@/components/settings/SimpleListManager";
 import { BrandsModelsManager } from "@/components/settings/BrandsModelsManager";
 import { EmployeesManager } from "@/components/settings/EmployeesManager";
+import { useServerFn } from "@tanstack/react-start";
+import { createUserAccount, deleteUserAccount } from "@/lib/admin-users.functions";
+import { useAuth } from "@/hooks/useAuth";
+
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "الإعدادات — توكيل السيارات" }] }),
@@ -77,6 +85,10 @@ function SettingsPage() {
 function UsersAndRoles() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
+  const { user: currentUser } = useAuth();
+  const createUser = useServerFn(createUserAccount);
+  const deleteUser = useServerFn(deleteUserAccount);
 
   const load = async () => {
     setLoading(true);
@@ -129,11 +141,27 @@ function UsersAndRoles() {
     load();
   };
 
+  const handleDelete = async (userId: string, name: string | null) => {
+    if (!confirm(`حذف المستخدم "${name || userId}" نهائياً؟`)) return;
+    try {
+      await deleteUser({ data: { userId } });
+      toast.success("تم حذف المستخدم");
+      load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "فشل الحذف");
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <UserCog className="w-5 h-5 text-primary" />
-        <h2 className="text-lg font-bold">المستخدمون والأدوار</h2>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <UserCog className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-bold">المستخدمون والأدوار</h2>
+        </div>
+        <Button size="sm" onClick={() => setAddOpen(true)}>
+          <Plus className="w-4 h-4 ml-1" /> إضافة مستخدم
+        </Button>
       </div>
 
       {loading ? (
@@ -143,31 +171,56 @@ function UsersAndRoles() {
       ) : (
         <div className="space-y-3">
           {users.map((u) => (
-            <UserRoleRow key={u.id} user={u} onAdd={addRole} onRemove={removeRole} />
+            <UserRoleRow
+              key={u.id}
+              user={u}
+              isSelf={u.id === currentUser?.id}
+              onAdd={addRole}
+              onRemove={removeRole}
+              onDelete={() => handleDelete(u.id, u.full_name)}
+            />
           ))}
         </div>
       )}
+
+      <AddUserDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        onCreate={async (payload) => {
+          try {
+            await createUser({ data: payload });
+            toast.success("تم إنشاء المستخدم");
+            setAddOpen(false);
+            load();
+          } catch (e: any) {
+            toast.error(e?.message ?? "فشل الإنشاء");
+          }
+        }}
+      />
     </div>
   );
 }
 
 function UserRoleRow({
-  user,
-  onAdd,
-  onRemove,
+  user, isSelf, onAdd, onRemove, onDelete,
 }: {
   user: UserRow;
+  isSelf: boolean;
   onAdd: (id: string, role: AppRole) => void;
   onRemove: (id: string, role: AppRole) => void;
+  onDelete: () => void;
 }) {
   const [pending, setPending] = useState<AppRole | "">("");
   const available = ALL_ROLES.filter((r) => !user.roles.includes(r));
 
   return (
     <div className="border border-border rounded-lg p-4 flex flex-col md:flex-row md:items-center gap-3 justify-between">
-      <div>
-        <div className="font-medium">{user.full_name || "—"}</div>
-        <div className="text-xs text-muted-foreground" dir="ltr">{user.id}</div>
+      <div className="min-w-0">
+        <div className="font-medium flex items-center gap-2">
+          {user.full_name || "—"}
+          {isSelf && <span className="text-xs bg-muted px-2 py-0.5 rounded">أنت</span>}
+        </div>
+        <div className="text-xs text-muted-foreground truncate" dir="ltr">{user.id}</div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {user.roles.length === 0 && (
@@ -182,7 +235,7 @@ function UserRoleRow({
             <button
               onClick={() => onRemove(user.id, r)}
               className="hover:text-destructive"
-              title="حذف"
+              title="حذف الدور"
             >
               <Trash2 className="w-3 h-3" />
             </button>
@@ -217,7 +270,72 @@ function UserRoleRow({
             </Button>
           </div>
         )}
+        {!isSelf && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onDelete}
+            title="حذف المستخدم نهائياً"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          >
+            <UserX className="w-4 h-4" />
+          </Button>
+        )}
       </div>
     </div>
   );
 }
+
+function AddUserDialog({
+  open, onOpenChange, onCreate,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onCreate: (p: { email: string; password: string; fullName: string; role: AppRole }) => Promise<void>;
+}) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [role, setRole] = useState<AppRole>("reception");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open) { setEmail(""); setPassword(""); setFullName(""); setRole("reception"); }
+  }, [open]);
+
+  const submit = async () => {
+    if (!email.trim() || password.length < 6) {
+      toast.error("الإيميل مطلوب وكلمة السر لا تقل عن 6 حروف");
+      return;
+    }
+    setSaving(true);
+    await onCreate({ email: email.trim(), password, fullName: fullName.trim(), role });
+    setSaving(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>إضافة مستخدم جديد</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <Input placeholder="الاسم الكامل" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          <Input type="email" placeholder="الإيميل *" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" />
+          <Input type="password" placeholder="كلمة السر (6 أحرف على الأقل) *" value={password} onChange={(e) => setPassword(e.target.value)} dir="ltr" />
+          <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ALL_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>إلغاء</Button>
+          <Button onClick={submit} disabled={saving}>{saving ? "جاري الحفظ..." : "إنشاء"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
