@@ -368,83 +368,6 @@ export type Database = {
           },
         ]
       }
-      inventory: {
-        Row: {
-          brand_id: string | null
-          color: string | null
-          created_at: string
-          engine_id: string | null
-          id: string
-          model_id: string | null
-          notes: string | null
-          price: number | null
-          status: Database["public"]["Enums"]["inventory_status"]
-          updated_at: string
-          vin: string | null
-          warehouse_id: string | null
-          year: number | null
-        }
-        Insert: {
-          brand_id?: string | null
-          color?: string | null
-          created_at?: string
-          engine_id?: string | null
-          id?: string
-          model_id?: string | null
-          notes?: string | null
-          price?: number | null
-          status?: Database["public"]["Enums"]["inventory_status"]
-          updated_at?: string
-          vin?: string | null
-          warehouse_id?: string | null
-          year?: number | null
-        }
-        Update: {
-          brand_id?: string | null
-          color?: string | null
-          created_at?: string
-          engine_id?: string | null
-          id?: string
-          model_id?: string | null
-          notes?: string | null
-          price?: number | null
-          status?: Database["public"]["Enums"]["inventory_status"]
-          updated_at?: string
-          vin?: string | null
-          warehouse_id?: string | null
-          year?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "inventory_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "inventory_engine_id_fkey"
-            columns: ["engine_id"]
-            isOneToOne: false
-            referencedRelation: "engines"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "inventory_model_id_fkey"
-            columns: ["model_id"]
-            isOneToOne: false
-            referencedRelation: "models"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "inventory_warehouse_id_fkey"
-            columns: ["warehouse_id"]
-            isOneToOne: false
-            referencedRelation: "warehouses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       maintenance_bookings: {
         Row: {
           car_id: string | null
@@ -558,6 +481,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      spare_parts: {
+        Row: {
+          created_at: string
+          id: string
+          min_quantity: number
+          name: string
+          notes: string | null
+          part_code: string | null
+          purchase_price: number | null
+          quantity: number
+          selling_price: number | null
+          unit: string
+          updated_at: string
+          workshop_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          min_quantity?: number
+          name: string
+          notes?: string | null
+          part_code?: string | null
+          purchase_price?: number | null
+          quantity?: number
+          selling_price?: number | null
+          unit?: string
+          updated_at?: string
+          workshop_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          min_quantity?: number
+          name?: string
+          notes?: string | null
+          part_code?: string | null
+          purchase_price?: number | null
+          quantity?: number
+          selling_price?: number | null
+          unit?: string
+          updated_at?: string
+          workshop_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spare_parts_workshop_id_fkey"
+            columns: ["workshop_id"]
+            isOneToOne: false
+            referencedRelation: "workshops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
