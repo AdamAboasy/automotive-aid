@@ -62,7 +62,7 @@ export function WorkOrdersManager() {
       supabase.from("clients").select("id,name").order("name"),
       supabase.from("cars").select("id, client_id, plate_number, brands(name), models(name)"),
       supabase.from("workshops").select("id,name").order("name"),
-      supabase.from("employees").select("id,full_name").order("name"),
+      supabase.from("employees").select("id,full_name").order("full_name"),
     ]);
     if (w.error) toast.error(w.error.message);
     setRows((w.data as WO[]) ?? []);
@@ -179,7 +179,7 @@ export function WorkOrdersManager() {
             </Select>
             <Select value={draft.technician_id} onValueChange={(v) => setDraft({ ...draft, technician_id: v })}>
               <SelectTrigger><SelectValue placeholder="الفني المسؤول" /></SelectTrigger>
-              <SelectContent>{techs.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+              <SelectContent>{techs.map((t) => <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>)}</SelectContent>
             </Select>
             <Select value={draft.status} onValueChange={(v) => setDraft({ ...draft, status: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>

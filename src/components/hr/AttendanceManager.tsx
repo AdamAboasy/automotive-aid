@@ -41,7 +41,7 @@ export function AttendanceManager() {
         .select("*, employees(full_name)")
         .eq("work_date", dateFilter)
         .order("created_at", { ascending: false }),
-      supabase.from("employees").select("id,full_name").order("name"),
+      supabase.from("employees").select("id,full_name").order("full_name"),
     ]);
     if (a.error) toast.error(a.error.message);
     setRows((a.data as Att[]) ?? []);
@@ -124,7 +124,7 @@ export function AttendanceManager() {
         <div className="flex flex-wrap gap-2">
           {emps.map((e) => (
             <Button key={e.id} size="sm" variant="outline" onClick={() => quickCheckIn(e.id)}>
-              <LogIn className="w-3 h-3 ml-1" /> {e.name}
+              <LogIn className="w-3 h-3 ml-1" /> {e.full_name}
             </Button>
           ))}
           {emps.length === 0 && <div className="text-xs text-muted-foreground">لا يوجد موظفين — أضفهم من الإعدادات</div>}
@@ -136,7 +136,7 @@ export function AttendanceManager() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Select value={draft.employee_id} onValueChange={(v) => setDraft({ ...draft, employee_id: v })}>
               <SelectTrigger><SelectValue placeholder="الموظف *" /></SelectTrigger>
-              <SelectContent>{emps.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
+              <SelectContent>{emps.map((e) => <SelectItem key={e.id} value={e.id}>{e.full_name}</SelectItem>)}</SelectContent>
             </Select>
             <Input type="date" value={draft.work_date} onChange={(e) => setDraft({ ...draft, work_date: e.target.value })} />
             <Input type="datetime-local" placeholder="الحضور" value={draft.check_in} onChange={(e) => setDraft({ ...draft, check_in: e.target.value })} />
