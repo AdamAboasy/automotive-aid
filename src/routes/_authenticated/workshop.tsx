@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Wrench } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SparePartsManager } from "@/components/workshop/SparePartsManager";
+import { WorkOrdersManager } from "@/components/workshop/WorkOrdersManager";
 
 export const Route = createFileRoute("/_authenticated/workshop")({
   head: () => ({ meta: [{ title: "الورشة — توكيل السيارات" }] }),
@@ -25,18 +26,19 @@ function WorkshopPage() {
           <div>
             <h1 className="text-2xl font-bold">الورشة</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              مخزون قطع الغيار، أوامر الشغل، حالة الصيانة، والفنيين.
+              أوامر الشغل ومخزون قطع الغيار.
             </p>
           </div>
         </div>
       </Card>
 
-      <Tabs defaultValue="spare_parts" className="space-y-4">
+      <Tabs defaultValue="work_orders" className="space-y-4">
         <TabsList className="flex flex-wrap h-auto">
+          <TabsTrigger value="work_orders">أوامر الشغل</TabsTrigger>
           <TabsTrigger value="spare_parts">قطع الغيار</TabsTrigger>
-          <TabsTrigger value="work_orders" disabled>أوامر الشغل (قريباً)</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="work_orders"><Card className="p-6"><WorkOrdersManager /></Card></TabsContent>
         <TabsContent value="spare_parts"><Card className="p-6"><SparePartsManager /></Card></TabsContent>
       </Tabs>
     </div>
