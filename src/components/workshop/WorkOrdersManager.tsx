@@ -32,7 +32,7 @@ interface WO {
   clients?: { name: string } | null;
   cars?: { plate_number: string | null; brands?: { name: string } | null; models?: { name: string } | null } | null;
   workshops?: { name: string } | null;
-  employees?: { name: string } | null;
+  employees?: { full_name: string } | null;
 }
 
 const empty = {
@@ -57,12 +57,12 @@ export function WorkOrdersManager() {
     setLoading(true);
     const [w, cl, ca, ws, em] = await Promise.all([
       supabase.from("work_orders")
-        .select("*, clients(name), cars(plate_number, brands(name), models(name)), workshops(name), employees(name)")
+        .select("*, clients(name), cars(plate_number, brands(name), models(name)), workshops(name), employees(full_name)")
         .order("created_at", { ascending: false }),
       supabase.from("clients").select("id,name").order("name"),
       supabase.from("cars").select("id, client_id, plate_number, brands(name), models(name)"),
       supabase.from("workshops").select("id,name").order("name"),
-      supabase.from("employees").select("id,name").order("name"),
+      supabase.from("employees").select("id,full_name").order("name"),
     ]);
     if (w.error) toast.error(w.error.message);
     setRows((w.data as WO[]) ?? []);
@@ -216,7 +216,7 @@ export function WorkOrdersManager() {
                   <div className="text-xs text-muted-foreground flex flex-wrap gap-3 mt-1">
                     <span>{fmtDate(w.created_at)}</span>
                     {w.workshops?.name && <span>ورشة: {w.workshops.name}</span>}
-                    {w.employees?.name && <span>فني: {w.employees.name}</span>}
+                    {w.employees?.full_name && <span>فني: {w.employees.full_name}</span>}
                     {w.total_cost != null && <span>التكلفة: {w.total_cost}</span>}
                   </div>
                 </div>

@@ -19,7 +19,7 @@ interface Att {
   id: string; employee_id: string; work_date: string;
   check_in: string | null; check_out: string | null;
   status: string; notes: string | null;
-  employees?: { name: string } | null;
+  employees?: { full_name: string } | null;
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -38,10 +38,10 @@ export function AttendanceManager() {
     setLoading(true);
     const [a, e] = await Promise.all([
       supabase.from("attendance")
-        .select("*, employees(name)")
+        .select("*, employees(full_name)")
         .eq("work_date", dateFilter)
         .order("created_at", { ascending: false }),
-      supabase.from("employees").select("id,name").order("name"),
+      supabase.from("employees").select("id,full_name").order("name"),
     ]);
     if (a.error) toast.error(a.error.message);
     setRows((a.data as Att[]) ?? []);
@@ -163,7 +163,7 @@ export function AttendanceManager() {
           {rows.map((a) => (
             <div key={a.id} className="border border-border rounded-lg p-3 flex items-center justify-between gap-2 hover:bg-accent/30 transition">
               <div className="min-w-0 flex-1">
-                <div className="font-medium">{a.employees?.name ?? "—"}</div>
+                <div className="font-medium">{a.employees?.full_name ?? "—"}</div>
                 <div className="text-xs text-muted-foreground flex flex-wrap gap-3 mt-1">
                   <span>الحالة: {STATUSES.find((s) => s.v === a.status)?.l ?? a.status}</span>
                   {a.check_in && <span>حضور: {fmtDate(a.check_in)}</span>}
