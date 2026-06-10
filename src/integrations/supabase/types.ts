@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance: {
+        Row: {
+          check_in: string | null
+          check_out: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          notes: string | null
+          status: string
+          updated_at: string
+          work_date: string
+        }
+        Insert: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          work_date?: string
+        }
+        Update: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       banks: {
         Row: {
           created_at: string
@@ -580,6 +624,96 @@ export type Database = {
         }
         Relationships: []
       }
+      work_orders: {
+        Row: {
+          booking_id: string | null
+          car_id: string | null
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          diagnosis: string | null
+          id: string
+          notes: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["work_order_status"]
+          technician_id: string | null
+          total_cost: number | null
+          updated_at: string
+          workshop_id: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          car_id?: string | null
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          diagnosis?: string | null
+          id?: string
+          notes?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["work_order_status"]
+          technician_id?: string | null
+          total_cost?: number | null
+          updated_at?: string
+          workshop_id?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          car_id?: string | null
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          diagnosis?: string | null
+          id?: string
+          notes?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["work_order_status"]
+          technician_id?: string | null
+          total_cost?: number | null
+          updated_at?: string
+          workshop_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "cars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_workshop_id_fkey"
+            columns: ["workshop_id"]
+            isOneToOne: false
+            referencedRelation: "workshops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workshops: {
         Row: {
           created_at: string
@@ -628,6 +762,12 @@ export type Database = {
       complaint_priority: "low" | "medium" | "high" | "urgent"
       complaint_status: "open" | "in_review" | "resolved" | "closed"
       inventory_status: "available" | "reserved" | "sold"
+      work_order_status:
+        | "open"
+        | "in_progress"
+        | "on_hold"
+        | "completed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -766,6 +906,13 @@ export const Constants = {
       complaint_priority: ["low", "medium", "high", "urgent"],
       complaint_status: ["open", "in_review", "resolved", "closed"],
       inventory_status: ["available", "reserved", "sold"],
+      work_order_status: [
+        "open",
+        "in_progress",
+        "on_hold",
+        "completed",
+        "cancelled",
+      ],
     },
   },
 } as const
