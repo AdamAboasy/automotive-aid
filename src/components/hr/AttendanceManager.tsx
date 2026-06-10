@@ -44,7 +44,7 @@ export function AttendanceManager() {
       supabase.from("employees").select("id,full_name").order("full_name"),
     ]);
     if (a.error) toast.error(a.error.message);
-    setRows((a.data as Att[]) ?? []);
+    setRows(((a.data as unknown) as Att[]) ?? []);
     setEmps(e.data ?? []);
     setLoading(false);
   };
