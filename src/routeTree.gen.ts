@@ -16,6 +16,7 @@ import { Route as AuthenticatedWorkshopRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReceptionRouteImport } from './routes/_authenticated/reception'
 import { Route as AuthenticatedHrRouteImport } from './routes/_authenticated/hr'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -51,10 +52,16 @@ const AuthenticatedHrRoute = AuthenticatedHrRouteImport.update({
   path: '/hr',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/hr': typeof AuthenticatedHrRoute
   '/reception': typeof AuthenticatedReceptionRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -63,6 +70,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/hr': typeof AuthenticatedHrRoute
   '/reception': typeof AuthenticatedReceptionRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -73,6 +81,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/hr': typeof AuthenticatedHrRoute
   '/_authenticated/reception': typeof AuthenticatedReceptionRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -80,14 +89,29 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/hr' | '/reception' | '/settings' | '/workshop'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/hr'
+    | '/reception'
+    | '/settings'
+    | '/workshop'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/hr' | '/reception' | '/settings' | '/workshop'
+  to:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/hr'
+    | '/reception'
+    | '/settings'
+    | '/workshop'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/dashboard'
     | '/_authenticated/hr'
     | '/_authenticated/reception'
     | '/_authenticated/settings'
@@ -151,10 +175,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHrRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHrRoute: typeof AuthenticatedHrRoute
   AuthenticatedReceptionRoute: typeof AuthenticatedReceptionRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -162,6 +194,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHrRoute: AuthenticatedHrRoute,
   AuthenticatedReceptionRoute: AuthenticatedReceptionRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,

@@ -12,6 +12,7 @@ export const ALL_ROLES: AppRole[] = ["admin", "reception", "workshop_manager", "
 
 // Which roles can access which tab
 export const TAB_ACCESS: Record<string, AppRole[]> = {
+  dashboard: ["admin", "reception", "workshop_manager", "technician", "hr"],
   reception: ["admin", "reception"],
   workshop: ["admin", "workshop_manager", "technician"],
   hr: ["admin", "hr"],
