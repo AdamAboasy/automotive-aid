@@ -22,6 +22,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SimpleListManager } from "@/components/settings/SimpleListManager";
 import { BrandsModelsManager } from "@/components/settings/BrandsModelsManager";
 import { EmployeesManager } from "@/components/settings/EmployeesManager";
+import { LegacyImporter } from "@/components/settings/LegacyImporter";
 import { useServerFn } from "@tanstack/react-start";
 import { createUserAccount, deleteUserAccount } from "@/lib/admin-users.functions";
 import { useAuth } from "@/hooks/useAuth";
@@ -68,6 +69,7 @@ function SettingsPage() {
           <TabsTrigger value="warehouses">المخازن</TabsTrigger>
           <TabsTrigger value="workshops">الورش</TabsTrigger>
           <TabsTrigger value="employees">الموظفون</TabsTrigger>
+          <TabsTrigger value="import">استيراد بيانات</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users"><Card className="p-6"><UsersAndRoles /></Card></TabsContent>
@@ -77,6 +79,7 @@ function SettingsPage() {
         <TabsContent value="warehouses"><Card className="p-6"><SimpleListManager table="warehouses" label="المخزن" withLocation /></Card></TabsContent>
         <TabsContent value="workshops"><Card className="p-6"><SimpleListManager table="workshops" label="الورشة" withLocation /></Card></TabsContent>
         <TabsContent value="employees"><Card className="p-6"><EmployeesManager /></Card></TabsContent>
+        <TabsContent value="import"><LegacyImporter /></TabsContent>
       </Tabs>
     </div>
   );
