@@ -40,7 +40,7 @@ function DashboardPage() {
     ] = await Promise.all([
       c(supabase.from("clients").select("*", { count: "exact", head: true })),
       c(supabase.from("cars").select("*", { count: "exact", head: true })),
-      c(supabase.from("maintenance_bookings").select("*", { count: "exact", head: true }).eq("booking_date", today)),
+      c(supabase.from("maintenance_bookings").select("*", { count: "exact", head: true }).gte("scheduled_at", `${today}T00:00:00`).lt("scheduled_at", `${today}T23:59:59`)),
       c(supabase.from("maintenance_bookings").select("*", { count: "exact", head: true }).eq("status", "pending")),
       c(supabase.from("work_orders").select("*", { count: "exact", head: true }).eq("status", "open")),
       c(supabase.from("work_orders").select("*", { count: "exact", head: true }).eq("status", "in_progress")),

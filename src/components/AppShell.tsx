@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Car, Wrench, Users, Settings, LogOut } from "lucide-react";
+import { Car, Wrench, Users, Settings, LogOut, BarChart3 } from "lucide-react";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { canAccess, ROLE_LABELS, type AppRole } from "@/lib/roles";
 import { toast } from "sonner";
 
 const TABS: { to: string; key: keyof typeof import("@/lib/roles").TAB_ACCESS; label: string; icon: typeof Car }[] = [
+  { to: "/dashboard", key: "dashboard", label: "لوحة المعلومات", icon: BarChart3 },
   { to: "/reception", key: "reception", label: "خدمة العملاء والاستقبال", icon: Car },
   { to: "/workshop", key: "workshop", label: "الورشة", icon: Wrench },
   { to: "/hr", key: "hr", label: "الموارد البشرية", icon: Users },
