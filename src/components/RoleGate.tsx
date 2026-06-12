@@ -8,7 +8,7 @@ export function RoleGate({
   tab,
   children,
 }: {
-  tab: "reception" | "workshop" | "hr" | "settings";
+  tab: "reception" | "customer_service" | "workshop" | "hr" | "settings" | "dashboard";
   children: ReactNode;
 }) {
   const { roles, loading } = useAuth();
