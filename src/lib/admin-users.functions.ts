@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const ROLES = ["admin", "reception", "workshop_manager", "technician", "hr"] as const;
+const ROLES = ["admin", "reception", "customer_service", "workshop_manager", "technician", "hr"] as const;
 type AppRole = (typeof ROLES)[number];
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
