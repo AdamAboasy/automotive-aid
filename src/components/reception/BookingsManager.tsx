@@ -194,6 +194,11 @@ export function BookingsManager() {
                 {STATUSES.find((s) => s.v === b.status)?.l ?? b.status}
               </span>
               <div className="flex gap-1 shrink-0">
+                {b.status !== "confirmed" && b.status !== "completed" && b.status !== "cancelled" && (
+                  <Button variant="outline" size="sm" onClick={() => createWorkOrder(b)} title="إنشاء أمر شغل">
+                    <Wrench className="w-4 h-4 ml-1" /> أمر شغل
+                  </Button>
+                )}
                 <Button variant="ghost" size="icon" onClick={() => startEdit(b)}><Pencil className="w-4 h-4" /></Button>
                 <Button variant="ghost" size="icon" onClick={() => remove(b.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
               </div>
