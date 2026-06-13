@@ -5,6 +5,7 @@ import { Headphones } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ComplaintsManager } from "@/components/reception/ComplaintsManager";
 import { FollowupsManager } from "@/components/reception/FollowupsManager";
+import { BookingsManager } from "@/components/reception/BookingsManager";
 
 export const Route = createFileRoute("/_authenticated/customer-service")({
   head: () => ({ meta: [{ title: "خدمة العملاء — توكيل السيارات" }] }),
