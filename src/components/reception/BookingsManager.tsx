@@ -110,6 +110,15 @@ export function BookingsManager() {
 
   const cancel = () => { setEditing(null); setAdding(false); setDraft(empty); };
 
+  const createWorkOrder = async (b: Booking) => {
+    const { data: existing } = await supabase.from("work_orders").select("id").eq("booking_id", b.id).maybeSingle();
+    if (existing) return toast.info("أمر الشغل موجود بالفعل لهذا الحجز");
+    const { error } = await supabase.from("maintenance_bookings").update({ status: "confirmed" }).eq("id", b.id);
+    if (error) return toast.error(error.message);
+    toast.success("تم إنشاء أمر الشغل");
+    load();
+  };
+
   const clientCars = cars.filter((c) => !draft.client_id || c.client_id === draft.client_id);
 
   return (
