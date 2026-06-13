@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, X, Save, Calendar } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Save, Calendar, Wrench } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fmtDate, toInputDateTime } from "@/lib/format";
 
@@ -110,6 +110,15 @@ export function BookingsManager() {
 
   const cancel = () => { setEditing(null); setAdding(false); setDraft(empty); };
 
+  const createWorkOrder = async (b: Booking) => {
+    const { data: existing } = await supabase.from("work_orders").select("id").eq("booking_id", b.id).maybeSingle();
+    if (existing) return toast.info("أمر الشغل موجود بالفعل لهذا الحجز");
+    const { error } = await supabase.from("maintenance_bookings").update({ status: "confirmed" }).eq("id", b.id);
+    if (error) return toast.error(error.message);
+    toast.success("تم إنشاء أمر الشغل");
+    load();
+  };
+
   const clientCars = cars.filter((c) => !draft.client_id || c.client_id === draft.client_id);
 
   return (
@@ -185,6 +194,11 @@ export function BookingsManager() {
                 {STATUSES.find((s) => s.v === b.status)?.l ?? b.status}
               </span>
               <div className="flex gap-1 shrink-0">
+                {b.status !== "confirmed" && b.status !== "completed" && b.status !== "cancelled" && (
+                  <Button variant="outline" size="sm" onClick={() => createWorkOrder(b)} title="إنشاء أمر شغل">
+                    <Wrench className="w-4 h-4 ml-1" /> أمر شغل
+                  </Button>
+                )}
                 <Button variant="ghost" size="icon" onClick={() => startEdit(b)}><Pencil className="w-4 h-4" /></Button>
                 <Button variant="ghost" size="icon" onClick={() => remove(b.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
               </div>

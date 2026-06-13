@@ -5,7 +5,6 @@ import { Car } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ClientsManager } from "@/components/reception/ClientsManager";
 import { CarsManager } from "@/components/reception/CarsManager";
-import { BookingsManager } from "@/components/reception/BookingsManager";
 
 export const Route = createFileRoute("/_authenticated/reception")({
   head: () => ({ meta: [{ title: "الاستقبال — توكيل السيارات" }] }),
@@ -27,7 +26,7 @@ function ReceptionPage() {
           <div>
             <h1 className="text-2xl font-bold">الاستقبال</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              تسجيل العملاء، السيارات، وحجوزات الصيانة.
+              تسجيل العملاء والسيارات.
             </p>
           </div>
         </div>
@@ -37,12 +36,10 @@ function ReceptionPage() {
         <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="clients">العملاء</TabsTrigger>
           <TabsTrigger value="cars">السيارات</TabsTrigger>
-          <TabsTrigger value="bookings">حجوزات الصيانة</TabsTrigger>
         </TabsList>
 
         <TabsContent value="clients"><Card className="p-6"><ClientsManager /></Card></TabsContent>
         <TabsContent value="cars"><Card className="p-6"><CarsManager /></Card></TabsContent>
-        <TabsContent value="bookings"><Card className="p-6"><BookingsManager /></Card></TabsContent>
       </Tabs>
     </div>
   );

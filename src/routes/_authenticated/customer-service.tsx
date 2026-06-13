@@ -5,6 +5,7 @@ import { Headphones } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ComplaintsManager } from "@/components/reception/ComplaintsManager";
 import { FollowupsManager } from "@/components/reception/FollowupsManager";
+import { BookingsManager } from "@/components/reception/BookingsManager";
 
 export const Route = createFileRoute("/_authenticated/customer-service")({
   head: () => ({ meta: [{ title: "خدمة العملاء — توكيل السيارات" }] }),
@@ -35,10 +36,12 @@ function CustomerServicePage() {
       <Tabs defaultValue="complaints" className="space-y-4">
         <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="complaints">الشكاوى</TabsTrigger>
+          <TabsTrigger value="bookings">حجوزات الصيانة</TabsTrigger>
           <TabsTrigger value="followups">المتابعة</TabsTrigger>
         </TabsList>
 
         <TabsContent value="complaints"><Card className="p-6"><ComplaintsManager /></Card></TabsContent>
+        <TabsContent value="bookings"><Card className="p-6"><BookingsManager /></Card></TabsContent>
         <TabsContent value="followups"><Card className="p-6"><FollowupsManager /></Card></TabsContent>
       </Tabs>
     </div>
