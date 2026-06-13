@@ -36,10 +36,12 @@ function CustomerServicePage() {
       <Tabs defaultValue="complaints" className="space-y-4">
         <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="complaints">الشكاوى</TabsTrigger>
+          <TabsTrigger value="bookings">حجوزات الصيانة</TabsTrigger>
           <TabsTrigger value="followups">المتابعة</TabsTrigger>
         </TabsList>
 
         <TabsContent value="complaints"><Card className="p-6"><ComplaintsManager /></Card></TabsContent>
+        <TabsContent value="bookings"><Card className="p-6"><BookingsManager /></Card></TabsContent>
         <TabsContent value="followups"><Card className="p-6"><FollowupsManager /></Card></TabsContent>
       </Tabs>
     </div>
