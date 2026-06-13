@@ -26,7 +26,7 @@ function ReceptionPage() {
           <div>
             <h1 className="text-2xl font-bold">الاستقبال</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              تسجيل العملاء، السيارات، وحجوزات الصيانة.
+              تسجيل العملاء والسيارات.
             </p>
           </div>
         </div>
@@ -36,12 +36,10 @@ function ReceptionPage() {
         <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="clients">العملاء</TabsTrigger>
           <TabsTrigger value="cars">السيارات</TabsTrigger>
-          <TabsTrigger value="bookings">حجوزات الصيانة</TabsTrigger>
         </TabsList>
 
         <TabsContent value="clients"><Card className="p-6"><ClientsManager /></Card></TabsContent>
         <TabsContent value="cars"><Card className="p-6"><CarsManager /></Card></TabsContent>
-        <TabsContent value="bookings"><Card className="p-6"><BookingsManager /></Card></TabsContent>
       </Tabs>
     </div>
   );
