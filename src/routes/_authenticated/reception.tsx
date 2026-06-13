@@ -5,7 +5,6 @@ import { Car } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ClientsManager } from "@/components/reception/ClientsManager";
 import { CarsManager } from "@/components/reception/CarsManager";
-import { BookingsManager } from "@/components/reception/BookingsManager";
 
 export const Route = createFileRoute("/_authenticated/reception")({
   head: () => ({ meta: [{ title: "الاستقبال — توكيل السيارات" }] }),
