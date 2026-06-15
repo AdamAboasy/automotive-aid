@@ -15,6 +15,7 @@ interface Employee {
   hire_date: string | null;
   workshop_id: string | null;
   is_active: boolean;
+  shift_start: string | null;
 }
 
 interface Workshop { id: string; name: string }
@@ -26,6 +27,7 @@ const empty = {
   salary: "",
   hire_date: "",
   workshop_id: "",
+  shift_start: "09:00",
 };
 
 export function EmployeesManager() {
@@ -57,6 +59,7 @@ export function EmployeesManager() {
       salary: form.salary ? Number(form.salary) : null,
       hire_date: form.hire_date || null,
       workshop_id: form.workshop_id || null,
+      shift_start: form.shift_start || null,
     });
     if (error) return toast.error(error.message);
     toast.success("تمت إضافة الموظف");
@@ -85,6 +88,7 @@ export function EmployeesManager() {
         <Input placeholder="رقم الهاتف" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         <Input placeholder="الراتب" type="number" value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })} />
         <Input placeholder="تاريخ التعيين" type="date" value={form.hire_date} onChange={(e) => setForm({ ...form, hire_date: e.target.value })} />
+        <Input placeholder="موعد الوردية (مثلاً 09:00)" type="time" value={form.shift_start} onChange={(e) => setForm({ ...form, shift_start: e.target.value })} />
         <Select value={form.workshop_id} onValueChange={(v) => setForm({ ...form, workshop_id: v })}>
           <SelectTrigger><SelectValue placeholder="الورشة" /></SelectTrigger>
           <SelectContent>
@@ -118,6 +122,7 @@ export function EmployeesManager() {
                     {e.phone && <span dir="ltr">{e.phone}</span>}
                     {ws && <span>الورشة: {ws.name}</span>}
                     {e.salary != null && <span>الراتب: {e.salary}</span>}
+                    {e.shift_start && <span>الوردية: {e.shift_start}</span>}
                   </div>
                 </div>
                 <div className="flex items-center gap-1">

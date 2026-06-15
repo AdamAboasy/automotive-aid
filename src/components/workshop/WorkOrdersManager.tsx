@@ -65,7 +65,17 @@ export function WorkOrdersManager() {
       supabase.from("employees").select("id,full_name").order("full_name"),
     ]);
     if (w.error) toast.error(w.error.message);
-    setRows((w.data as WO[]) ?? []);
+    const data = (w.data as WO[]) ?? [];
+    setRows(data);
+    
+    // Alert for unassigned work orders (for workshop manager)
+    const unassigned = data.filter(r => r.status === "open" && !r.technician_id);
+    if (unassigned.length > 0) {
+      toast.info(`يوجد ${unassigned.length} أمر شغل جديد بانتظار تعيين فني/مهندس`, {
+        duration: 5000,
+      });
+    }
+
     setClients(cl.data ?? []); setCars(ca.data ?? []);
     setWorkshops(ws.data ?? []); setTechs(em.data ?? []);
     setLoading(false);

@@ -38,13 +38,13 @@ export function AttendanceManager() {
     setLoading(true);
     const [a, e] = await Promise.all([
       supabase.from("attendance")
-        .select("*, employees(full_name)")
+        .select("*, employees(full_name, shift_start)")
         .eq("work_date", dateFilter)
         .order("created_at", { ascending: false }),
-      supabase.from("employees").select("id,full_name").order("full_name"),
+      supabase.from("employees").select("id,full_name, shift_start").order("full_name"),
     ]);
     if (a.error) toast.error(a.error.message);
-    setRows(((a.data as unknown) as Att[]) ?? []);
+    setRows(((a.data as unknown) as any[]) ?? []);
     setEmps(e.data ?? []);
     setLoading(false);
   };
@@ -166,8 +166,9 @@ export function AttendanceManager() {
                 <div className="font-medium">{a.employees?.full_name ?? "—"}</div>
                 <div className="text-xs text-muted-foreground flex flex-wrap gap-3 mt-1">
                   <span>الحالة: {STATUSES.find((s) => s.v === a.status)?.l ?? a.status}</span>
-                  {a.check_in && <span>حضور: {fmtDate(a.check_in)}</span>}
-                  {a.check_out && <span>انصراف: {fmtDate(a.check_out)}</span>}
+                  {a.check_in && <span>حضور فعلي: {new Date(a.check_in).toLocaleTimeString("ar-EG", { hour: '2-digit', minute: '2-digit' })}</span>}
+                  {(a as any).employees?.shift_start && <span className="text-primary font-medium">الوردية: {(a as any).employees.shift_start}</span>}
+                  {a.check_out && <span>انصراف: {new Date(a.check_out).toLocaleTimeString("ar-EG", { hour: '2-digit', minute: '2-digit' })}</span>}
                   {a.notes && <span>{a.notes}</span>}
                 </div>
               </div>

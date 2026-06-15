@@ -151,8 +151,7 @@ function DashboardPage() {
           <Section title="الاستقبال" icon={Car}>
             <Stat label="إجمالي العملاء" value={stats.clients} />
             <Stat label="إجمالي السيارات" value={stats.cars} />
-            <Stat label="حجوزات اليوم" value={stats.bookings_today} accent="primary" />
-            <Stat label="حجوزات في الانتظار" value={stats.bookings_pending} accent="warn" />
+            <Stat label="حجوزات اليوم" value={stats.bookings_today} accent="primary" onClick={() => navigate({ to: "/customer-service" })} />
           </Section>
 
           <Section title="خدمة العملاء" icon={AlertCircle}>
@@ -188,7 +187,6 @@ function DashboardPage() {
           <Section title="الموارد البشرية" icon={Users}>
             <Stat label="عدد الموظفين" value={stats.employees} />
             <Stat label="الحاضرون اليوم" value={stats.attendance_today} accent="good" icon={Calendar} />
-            <Stat label="قطع غيار مسجلة" value={stats.spare_parts} icon={ClipboardList} />
           </Section>
         </>
       )}

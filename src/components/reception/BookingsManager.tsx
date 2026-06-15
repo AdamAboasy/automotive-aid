@@ -46,19 +46,26 @@ export function BookingsManager() {
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState(empty);
+  const [filterDate, setFilterDate] = useState<string>("");
 
   const load = async () => {
     setLoading(true);
+    let query = supabase.from("maintenance_bookings")
+      .select("*, clients(name), cars(plate_number, brands(name), models(name)), workshops(name), work_orders(status, profiles(full_name))")
+      .order("scheduled_at", { ascending: false });
+    
+    if (filterDate) {
+      query = query.gte("scheduled_at", `${filterDate}T00:00:00`).lt("scheduled_at", `${filterDate}T23:59:59`);
+    }
+
     const [b, cl, ca, ws] = await Promise.all([
-      supabase.from("maintenance_bookings")
-        .select("*, clients(name), cars(plate_number, brands(name), models(name)), workshops(name)")
-        .order("scheduled_at", { ascending: false }),
+      query,
       supabase.from("clients").select("id,name").order("name"),
       supabase.from("cars").select("id, client_id, plate_number, brands(name), models(name)"),
       supabase.from("workshops").select("id,name").order("name"),
     ]);
     if (b.error) toast.error(b.error.message);
-    setRows((b.data as Booking[]) ?? []);
+    setRows((b.data as any[]) ?? []);
     setClients(cl.data ?? []);
     setCars(ca.data ?? []);
     setWorkshops(ws.data ?? []);
@@ -113,9 +120,23 @@ export function BookingsManager() {
   const createWorkOrder = async (b: Booking) => {
     const { data: existing } = await supabase.from("work_orders").select("id").eq("booking_id", b.id).maybeSingle();
     if (existing) return toast.info("أمر الشغل موجود بالفعل لهذا الحجز");
+    
+    // Create actual work order record
+    const { error: woError } = await supabase.from("work_orders").insert({
+      booking_id: b.id,
+      client_id: b.client_id,
+      car_id: b.car_id,
+      workshop_id: b.workshop_id,
+      status: "open",
+      description: b.service_type || "من حجز صيانة",
+    });
+
+    if (woError) return toast.error(woError.message);
+
     const { error } = await supabase.from("maintenance_bookings").update({ status: "confirmed" }).eq("id", b.id);
     if (error) return toast.error(error.message);
-    toast.success("تم إنشاء أمر الشغل");
+    
+    toast.success("تم إنشاء أمر شغل فعلي وتنبيه مدير الورشة");
     load();
   };
 
@@ -123,8 +144,18 @@ export function BookingsManager() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold">حجوزات الصيانة ({rows.length})</h2>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-bold">حجوزات الصيانة ({rows.length})</h2>
+          <Input 
+            type="date" 
+            value={filterDate} 
+            onChange={(e) => { setFilterDate(e.target.value); }} 
+            className="w-40 h-9"
+            title="تحديد التاريخ من الكالندر"
+          />
+          <Button onClick={() => load()} size="sm" variant="outline">بحث</Button>
+        </div>
         {!adding && !editing && (
           <Button onClick={() => { setAdding(true); setDraft(empty); }} size="sm">
             <Plus className="w-4 h-4 ml-1" /> حجز جديد
@@ -187,6 +218,9 @@ export function BookingsManager() {
                     <span>{fmtDate(b.scheduled_at)}</span>
                     {b.service_type && <span>{b.service_type}</span>}
                     {b.workshops?.name && <span>ورشة: {b.workshops.name}</span>}
+                    {(b as any).work_orders?.[0]?.profiles?.full_name && (
+                      <span className="text-primary font-medium">المهندس: {(b as any).work_orders[0].profiles.full_name}</span>
+                    )}
                   </div>
                 </div>
               </div>

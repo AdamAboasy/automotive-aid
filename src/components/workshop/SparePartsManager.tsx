@@ -128,20 +128,44 @@ export function SparePartsManager() {
       {(adding || editing) && (
         <Card className="p-4 space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Input placeholder="اسم القطعة *" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
-            <Input placeholder="كود القطعة" value={draft.part_code} onChange={(e) => setDraft({ ...draft, part_code: e.target.value })} />
-            <Select value={draft.workshop_id} onValueChange={(v) => setDraft({ ...draft, workshop_id: v })}>
-              <SelectTrigger><SelectValue placeholder="الورشة" /></SelectTrigger>
-              <SelectContent>{workshops.map((w) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent>
-            </Select>
-            <Select value={draft.unit} onValueChange={(v) => setDraft({ ...draft, unit: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
-            </Select>
-            <Input type="number" step="any" placeholder="الكمية الحالية" value={draft.quantity} onChange={(e) => setDraft({ ...draft, quantity: e.target.value })} />
-            <Input type="number" step="any" placeholder="حد التنبيه (أدنى كمية)" value={draft.min_quantity} onChange={(e) => setDraft({ ...draft, min_quantity: e.target.value })} />
-            <Input type="number" step="any" placeholder="سعر الشراء" value={draft.purchase_price} onChange={(e) => setDraft({ ...draft, purchase_price: e.target.value })} />
-            <Input type="number" step="any" placeholder="سعر البيع" value={draft.selling_price} onChange={(e) => setDraft({ ...draft, selling_price: e.target.value })} />
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-primary">اسم القطعة *</label>
+              <Input placeholder="مثال: تيل فرامل أمامي" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-primary">كود القطعة (Part Number)</label>
+              <Input placeholder="مثال: OEM-12345" value={draft.part_code} onChange={(e) => setDraft({ ...draft, part_code: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-primary">الورشة / المخزن</label>
+              <Select value={draft.workshop_id} onValueChange={(v) => setDraft({ ...draft, workshop_id: v })}>
+                <SelectTrigger><SelectValue placeholder="اختر الورشة" /></SelectTrigger>
+                <SelectContent>{workshops.map((w) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-primary">وحدة القياس</label>
+              <Select value={draft.unit} onValueChange={(v) => setDraft({ ...draft, unit: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-primary">الكمية المتوفرة</label>
+              <Input type="number" step="any" placeholder="0" value={draft.quantity} onChange={(e) => setDraft({ ...draft, quantity: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-primary">حد الطلب (التنبيه عند نقص المخزون)</label>
+              <Input type="number" step="any" placeholder="5" value={draft.min_quantity} onChange={(e) => setDraft({ ...draft, min_quantity: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-primary">سعر الشراء (ج.م)</label>
+              <Input type="number" step="any" placeholder="0.00" value={draft.purchase_price} onChange={(e) => setDraft({ ...draft, purchase_price: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-primary">سعر البيع للعميل (ج.م)</label>
+              <Input type="number" step="any" placeholder="0.00" value={draft.selling_price} onChange={(e) => setDraft({ ...draft, selling_price: e.target.value })} />
+            </div>
           </div>
           <Textarea placeholder="ملاحظات" value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} rows={2} />
           <div className="flex gap-2">

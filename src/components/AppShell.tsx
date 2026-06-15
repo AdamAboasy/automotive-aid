@@ -67,10 +67,13 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             <div className="flex items-center gap-2 shrink-0">
               {!loading && user && (
-                <div className="text-xs text-muted-foreground hidden md:block text-left">
-                  <div className="font-medium text-foreground">{user.email}</div>
-                  {primaryRole && <div>{ROLE_LABELS[primaryRole]}</div>}
-                </div>
+                <Link
+                  to="/settings"
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold hover:bg-primary/20 transition-colors"
+                  title={user.email || ""}
+                >
+                  {user.email?.[0].toUpperCase() || "U"}
+                </Link>
               )}
               <Button variant="ghost" size="icon" onClick={handleSignOut} title="تسجيل الخروج">
                 <LogOut className="w-4 h-4" />
