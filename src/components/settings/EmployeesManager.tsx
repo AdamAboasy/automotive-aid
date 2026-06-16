@@ -15,7 +15,7 @@ interface Employee {
   hire_date: string | null;
   workshop_id: string | null;
   is_active: boolean;
-  shift_start: string | null;
+  shift_start?: string | null;
 }
 
 interface Workshop { id: string; name: string }
@@ -52,7 +52,7 @@ export function EmployeesManager() {
 
   const add = async () => {
     if (!form.full_name.trim()) return;
-    const { error } = await supabase.from("employees").insert({
+    const payload: any = {
       full_name: form.full_name.trim(),
       job_title: form.job_title.trim() || null,
       phone: form.phone.trim() || null,
@@ -60,7 +60,8 @@ export function EmployeesManager() {
       hire_date: form.hire_date || null,
       workshop_id: form.workshop_id || null,
       shift_start: form.shift_start || null,
-    });
+    };
+    const { error } = await supabase.from("employees").insert(payload);
     if (error) return toast.error(error.message);
     toast.success("تمت إضافة الموظف");
     setForm(empty);
