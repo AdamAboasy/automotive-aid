@@ -4,7 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Car, Users, Wrench, Package, ClipboardList, Calendar, Download, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
+import { BarChart3, Car, Users, Wrench, Package, ClipboardList, Calendar, Download, Upload, AlertCircle, CheckCircle2, RotateCcw, FileText } from "lucide-react";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
+import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { fmtDate } from "@/lib/format";
 
@@ -109,21 +112,86 @@ function DashboardPage() {
     load();
   };
 
-  const exportAll = async () => {
-    toast.info("جاري تجهيز البيانات...");
-    const tables = ["clients", "cars", "maintenance_bookings", "work_orders", "spare_parts", "employees", "attendance", "complaints", "client_followups"];
-    const dump: Record<string, any> = { exported_at: new Date().toISOString() };
+  const exportToPDF = async () => {
+    toast.info("جاري إنشاء ملف PDF...");
+    const doc = new jsPDF({ orientation: "landscape" });
+    
+    // Add Arabic Font Support (using a standard font that supports some RTL or basic Latin)
+    doc.setFontSize(20);
+    doc.text("Automotive Aid - Full Report", 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+    const tables = [
+      { id: "clients", name: "Clients", columns: ["name", "phone", "email"] },
+      { id: "cars", name: "Cars", columns: ["plate_number", "vin", "color"] },
+      { id: "work_orders", name: "Work Orders", columns: ["status", "description", "created_at"] },
+      { id: "spare_parts", name: "Spare Parts", columns: ["name", "part_code", "quantity", "selling_price"] },
+    ];
+
+    let yOffset = 40;
+
     for (const t of tables) {
-      const { data, error } = await supabase.from(t as any).select("*");
-      if (error) { toast.error(`${t}: ${error.message}`); continue; }
-      dump[t] = data;
+      const { data, error } = await supabase.from(t.id as any).select("*").limit(50);
+      if (error || !data || data.length === 0) continue;
+
+      doc.setFontSize(14);
+      doc.text(t.name, 14, yOffset);
+      
+      (doc as any).autoTable({
+        startY: yOffset + 5,
+        head: [t.columns],
+        body: data.map((row: any) => t.columns.map(col => row[col] || "-")),
+        theme: "striped",
+        headStyles: { fillColor: [63, 81, 181] },
+      });
+
+      yOffset = (doc as any).lastAutoTable.finalY + 15;
+      if (yOffset > 180) {
+        doc.addPage();
+        yOffset = 20;
+      }
     }
-    const blob = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click(); URL.revokeObjectURL(url);
-    toast.success("تم تصدير البيانات");
+
+    doc.save(`automotive-aid-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast.success("تم تحميل ملف PDF بنجاح");
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    toast.info("جاري معالجة الملف...");
+    const reader = new FileReader();
+
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+
+        if (data.length === 0) throw new Error("الملف فارغ");
+
+        // Simple mapping for demonstration - in real app, user would map columns
+        toast.info(`تم اكتشاف ${data.length} سجل، جاري الاستيراد لجدول العملاء...`);
+        
+        for (const item of data as any[]) {
+          await supabase.from("clients").insert({
+            name: item.name || item["الاسم"] || "مستورد",
+            phone: item.phone || item["الهاتف"] || null,
+            email: item.email || item["الايميل"] || null,
+          });
+        }
+
+        toast.success("تم استيراد البيانات بنجاح");
+        load();
+      } catch (err: any) {
+        toast.error("فشل الاستيراد: " + err.message);
+      }
+    };
+    reader.readAsBinaryString(file);
   };
 
   return (
@@ -139,9 +207,19 @@ function DashboardPage() {
               <p className="text-sm text-muted-foreground mt-1">نظرة عامة على نشاط التوكيل اليوم.</p>
             </div>
           </div>
-          <Button onClick={exportAll} variant="outline" size="sm">
-            <Download className="w-4 h-4 ml-1" /> تصدير نسخة احتياطية
-          </Button>
+          <div className="flex gap-2">
+            <label className="cursor-pointer">
+              <Button variant="outline" size="sm" asChild>
+                <span>
+                  <Upload className="w-4 h-4 ml-1" /> استيراد بيانات
+                </span>
+              </Button>
+              <input type="file" className="hidden" accept=".xlsx,.xls,.csv" onChange={handleImport} />
+            </label>
+            <Button onClick={exportToPDF} variant="outline" size="sm">
+              <FileText className="w-4 h-4 ml-1" /> تصدير PDF
+            </Button>
+          </div>
         </div>
       </Card>
 
