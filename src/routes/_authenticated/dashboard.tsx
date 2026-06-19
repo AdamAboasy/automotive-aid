@@ -4,7 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Car, Users, Wrench, Package, ClipboardList, Calendar, Download, Upload, AlertCircle, CheckCircle2, RotateCcw, FileText } from "lucide-react";
+import { BarChart3, Car, Users, Wrench, Package, ClipboardList, Calendar, Download, Upload, AlertCircle, CheckCircle2, RotateCcw, FileText, Filter } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
+import { addMonths, format, isAfter, subMonths } from "date-fns";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -44,6 +47,10 @@ interface LowPart {
 
 function DashboardPage() {
   const navigate = useNavigate();
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: subMonths(new Date(), 1),
+    to: new Date(),
+  });
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [complaintsOpen, setComplaintsOpen] = useState(false);
@@ -56,7 +63,10 @@ function DashboardPage() {
 
   const load = async () => {
     setLoading(true);
+    const fromStr = dateRange.from.toISOString();
+    const toStr = dateRange.to.toISOString();
     const today = new Date().toISOString().slice(0, 10);
+    
     const c = (q: any) => q.then((r: any) => r.count ?? 0);
     const [
       clients, cars, bookingsToday, bookingsPending,
@@ -66,11 +76,11 @@ function DashboardPage() {
     ] = await Promise.all([
       c(supabase.from("clients").select("*", { count: "exact", head: true })),
       c(supabase.from("cars").select("*", { count: "exact", head: true })),
-      c(supabase.from("maintenance_bookings").select("*", { count: "exact", head: true }).gte("scheduled_at", `${today}T00:00:00`).lt("scheduled_at", `${today}T23:59:59`)),
+      c(supabase.from("maintenance_bookings").select("*", { count: "exact", head: true }).gte("scheduled_at", fromStr).lte("scheduled_at", toStr)),
       c(supabase.from("maintenance_bookings").select("*", { count: "exact", head: true }).eq("status", "pending")),
-      c(supabase.from("work_orders").select("*", { count: "exact", head: true }).eq("status", "open")),
+      c(supabase.from("work_orders").select("*", { count: "exact", head: true }).eq("status", "open").gte("created_at", fromStr).lte("created_at", toStr)),
       c(supabase.from("work_orders").select("*", { count: "exact", head: true }).eq("status", "in_progress")),
-      c(supabase.from("work_orders").select("*", { count: "exact", head: true }).eq("status", "completed")),
+      c(supabase.from("work_orders").select("*", { count: "exact", head: true }).eq("status", "completed").gte("updated_at", fromStr).lte("updated_at", toStr)),
       c(supabase.from("spare_parts").select("*", { count: "exact", head: true })),
       c(supabase.from("employees").select("*", { count: "exact", head: true })),
       c(supabase.from("attendance").select("*", { count: "exact", head: true }).eq("work_date", today).eq("status", "present")),
@@ -94,7 +104,7 @@ function DashboardPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [dateRange]);
 
   const resolveComplaint = async (id: string) => {
     const { error } = await supabase.from("complaints").update({ status: "resolved" } as any).eq("id", id);
@@ -113,48 +123,57 @@ function DashboardPage() {
   };
 
   const exportToPDF = async () => {
-    toast.info("جاري إنشاء ملف PDF...");
-    const doc = new jsPDF({ orientation: "landscape" });
-    
-    // Add Arabic Font Support (using a standard font that supports some RTL or basic Latin)
-    doc.setFontSize(20);
-    doc.text("Automotive Aid - Full Report", 14, 20);
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
-
-    const tables = [
-      { id: "clients", name: "Clients", columns: ["name", "phone", "email"] },
-      { id: "cars", name: "Cars", columns: ["plate_number", "vin", "color"] },
-      { id: "work_orders", name: "Work Orders", columns: ["status", "description", "created_at"] },
-      { id: "spare_parts", name: "Spare Parts", columns: ["name", "part_code", "quantity", "selling_price"] },
-    ];
-
-    let yOffset = 40;
-
-    for (const t of tables) {
-      const { data, error } = await supabase.from(t.id as any).select("*").limit(50);
-      if (error || !data || data.length === 0) continue;
-
-      doc.setFontSize(14);
-      doc.text(t.name, 14, yOffset);
+    try {
+      toast.info("جاري إنشاء ملف PDF...");
+      const doc = new jsPDF({ orientation: "landscape" });
       
-      (doc as any).autoTable({
-        startY: yOffset + 5,
-        head: [t.columns],
-        body: data.map((row: any) => t.columns.map(col => row[col] || "-")),
-        theme: "striped",
-        headStyles: { fillColor: [63, 81, 181] },
-      });
+      doc.setFontSize(22);
+      doc.setTextColor(63, 81, 181);
+      doc.text("Automotive Aid - Professional Report", 14, 20);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Period: ${format(dateRange.from, "PPP")} - ${format(dateRange.to, "PPP")}`, 14, 28);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 33);
 
-      yOffset = (doc as any).lastAutoTable.finalY + 15;
-      if (yOffset > 180) {
-        doc.addPage();
-        yOffset = 20;
+      const tables = [
+        { id: "clients", name: "Registered Clients", columns: ["name", "phone", "email"] },
+        { id: "cars", name: "Vehicle Inventory", columns: ["plate_number", "vin", "color"] },
+        { id: "work_orders", name: "Service Work Orders", columns: ["status", "description", "created_at"] },
+        { id: "spare_parts", name: "Inventory Status", columns: ["name", "part_code", "quantity", "selling_price"] },
+      ];
+
+      let yOffset = 45;
+
+      for (const t of tables) {
+        const { data, error } = await supabase.from(t.id as any).select("*").limit(100);
+        if (error || !data || data.length === 0) continue;
+
+        if (yOffset > 160) { doc.addPage(); yOffset = 20; }
+
+        doc.setFontSize(14);
+        doc.setTextColor(0);
+        doc.text(t.name, 14, yOffset);
+        
+        (doc as any).autoTable({
+          startY: yOffset + 5,
+          head: [t.columns.map(c => c.toUpperCase().replace("_", " "))],
+          body: data.map((row: any) => t.columns.map(col => String(row[col] || "-"))),
+          theme: "grid",
+          headStyles: { fillColor: [63, 81, 181], textColor: 255, fontStyle: "bold" },
+          styles: { fontSize: 9, cellPadding: 3 },
+          margin: { left: 14, right: 14 },
+        });
+
+        yOffset = (doc as any).lastAutoTable.finalY + 20;
       }
-    }
 
-    doc.save(`automotive-aid-report-${new Date().toISOString().slice(0, 10)}.pdf`);
-    toast.success("تم تحميل ملف PDF بنجاح");
+      doc.save(`automotive-report-${format(new Date(), "yyyy-MM-dd-HHmm")}.pdf`);
+      toast.success("تم تصدير التقرير بنجاح");
+    } catch (err) {
+      console.error(err);
+      toast.error("حدث خطأ أثناء تصدير PDF");
+    }
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,11 +226,27 @@ function DashboardPage() {
               <p className="text-sm text-muted-foreground mt-1">نظرة عامة على نشاط التوكيل اليوم.</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Filter className="w-4 h-4" />
+                  {format(dateRange.from, "dd/MM")} - {format(dateRange.to, "dd/MM")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <CalendarUI
+                  mode="range"
+                  selected={{ from: dateRange.from, to: dateRange.to }}
+                  onSelect={(range: any) => range?.from && range?.to && setDateRange({ from: range.from, to: range.to })}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
             <label className="cursor-pointer">
               <Button variant="outline" size="sm" asChild>
                 <span>
-                  <Upload className="w-4 h-4 ml-1" /> استيراد بيانات
+                  <Upload className="w-4 h-4 ml-1" /> استيراد
                 </span>
               </Button>
               <input type="file" className="hidden" accept=".xlsx,.xls,.csv" onChange={handleImport} />

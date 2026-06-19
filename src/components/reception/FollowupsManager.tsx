@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { addMonths, isAfter } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,8 +27,51 @@ export function FollowupsManager() {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState(empty);
 
+  const generateAutomaticFollowups = async () => {
+    // 1. Get all clients and their last work order date
+    const { data: clientsData } = await supabase.from("clients").select("id, name");
+    if (!clientsData) return;
+
+    for (const client of clientsData) {
+      // Find the latest completed work order for this client
+      const { data: latestWO } = await supabase
+        .from("work_orders")
+        .select("updated_at")
+        .eq("status", "completed")
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+      if (latestWO && latestWO.length > 0) {
+        const lastVisit = new Date(latestWO[0].updated_at);
+        const nextFollowupDate = addMonths(lastVisit, 3);
+
+        // Only generate if the 3 months have passed or are approaching
+        if (isAfter(new Date(), nextFollowupDate)) {
+          // Check if a followup already exists for this timeframe to avoid duplicates
+          const { data: existing } = await supabase
+            .from("client_followups")
+            .select("id")
+            .eq("client_id", client.id)
+            .gte("scheduled_at", nextFollowupDate.toISOString().split('T')[0])
+            .limit(1);
+
+          if (!existing || existing.length === 0) {
+            await supabase.from("client_followups").insert({
+              client_id: client.id,
+              followup_type: "متابعة دورية (3 شهور)",
+              scheduled_at: nextFollowupDate.toISOString(),
+              notes: "توليد تلقائي بناءً على آخر زيارة",
+              done: false
+            });
+          }
+        }
+      }
+    }
+  };
+
   const load = async () => {
     setLoading(true);
+    await generateAutomaticFollowups();
     const [f, cl] = await Promise.all([
       supabase.from("client_followups").select("*, clients(name)").order("scheduled_at", { ascending: true }),
       supabase.from("clients").select("id,name").order("name"),
