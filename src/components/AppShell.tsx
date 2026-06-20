@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Car, Wrench, Users, Settings, LogOut, BarChart3, Headphones } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +20,25 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, roles, loading } = useAuth();
+
+  // Track user activity
+  useEffect(() => {
+    if (!user) return;
+
+    const updateActivity = async () => {
+      try {
+        await supabase.from("profiles").update({ 
+          last_active: new Date().toISOString() 
+        } as any).eq("id", user.id);
+      } catch (e) {
+        console.error("Activity update failed", e);
+      }
+    };
+
+    updateActivity();
+    const interval = setInterval(updateActivity, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, [user]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();

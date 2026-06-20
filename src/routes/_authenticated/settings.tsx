@@ -69,10 +69,12 @@ function SettingsPage() {
           <TabsTrigger value="warehouses">المخازن</TabsTrigger>
           <TabsTrigger value="workshops">الورش</TabsTrigger>
           <TabsTrigger value="employees">الموظفون</TabsTrigger>
+          <TabsTrigger value="monitoring">مراقبة النشاط</TabsTrigger>
           <TabsTrigger value="import">استيراد بيانات</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users"><Card className="p-6"><UsersAndRoles /></Card></TabsContent>
+        <TabsContent value="monitoring"><Card className="p-6"><ActivityMonitoring /></Card></TabsContent>
         <TabsContent value="brands"><Card className="p-6"><BrandsModelsManager /></Card></TabsContent>
         <TabsContent value="banks"><Card className="p-6"><SimpleListManager table="banks" label="البنك" /></Card></TabsContent>
         <TabsContent value="body_types"><Card className="p-6"><SimpleListManager table="body_types" label="نوع الهيكل" /></Card></TabsContent>
@@ -81,6 +83,49 @@ function SettingsPage() {
         <TabsContent value="employees"><Card className="p-6"><EmployeesManager /></Card></TabsContent>
         <TabsContent value="import"><LegacyImporter /></TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function ActivityMonitoring() {
+  const [activities, setActivities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, full_name, last_active")
+      .order("last_active", { ascending: false });
+    
+    if (error) toast.error("تعذر تحميل بيانات النشاط");
+    else setActivities(data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); const i = setInterval(load, 30000); return () => clearInterval(i); }, []);
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-bold">نشاط المستخدمين الحالي</h2>
+      <div className="grid gap-3">
+        {activities.map((u) => {
+          const lastActive = u.last_active ? new Date(u.last_active) : null;
+          const isActive = lastActive && (new Date().getTime() - lastActive.getTime() < 300000); // 5 minutes
+          return (
+            <div key={u.id} className="border border-border rounded-lg p-4 flex items-center justify-between">
+              <div>
+                <div className="font-medium">{u.full_name || "—"}</div>
+                <div className="text-xs text-muted-foreground">آخر ظهور: {u.last_active ? new Date(u.last_active).toLocaleString() : "لم يسجل دخول بعد"}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${isActive ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-gray-300"}`} />
+                <span className="text-sm">{isActive ? "متصل الآن" : "غير متصل"}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

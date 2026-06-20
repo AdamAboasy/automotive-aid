@@ -4,7 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Car, Users, Wrench, Package, ClipboardList, Calendar, Download, Upload, AlertCircle, CheckCircle2, RotateCcw, FileText, Filter } from "lucide-react";
+import { BarChart3, Car, Users, Wrench, Package, ClipboardList, Calendar, Download, Upload, AlertCircle, CheckCircle2, RotateCcw, FileText, Filter, TrendingUp } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import { addMonths, format, isAfter, subMonths } from "date-fns";
@@ -54,9 +55,11 @@ function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [complaintsOpen, setComplaintsOpen] = useState(false);
+  const [bookingsOpen, setBookingsOpen] = useState(false);
   const [resolvedOpen, setResolvedOpen] = useState(false);
   const [lowStockOpen, setLowStockOpen] = useState(false);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [todayBookings, setTodayBookings] = useState<any[]>([]);
   const [resolvedComplaints, setResolvedComplaints] = useState<Complaint[]>([]);
   const [lowParts, setLowParts] = useState<LowPart[]>([]);
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
@@ -69,10 +72,11 @@ function DashboardPage() {
     
     const c = (q: any) => q.then((r: any) => r.count ?? 0);
     const [
-      clients, cars, bookingsToday, bookingsPending,
+      clients, cars, bookingsTodayCount, bookingsPending,
       woOpen, woInProgress, woCompleted,
       spareParts, employees, attendanceToday, spareAll,
       complaintsOpenCount, openCList, resolvedCList,
+      bookingsList
     ] = await Promise.all([
       c(supabase.from("clients").select("*", { count: "exact", head: true })),
       c(supabase.from("cars").select("*", { count: "exact", head: true })),
@@ -88,7 +92,9 @@ function DashboardPage() {
       c(supabase.from("complaints").select("*", { count: "exact", head: true }).in("status", ["open", "in_review"])),
       supabase.from("complaints").select("*, clients(name,phone), cars(plate_number)").in("status", ["open", "in_review"]).order("created_at", { ascending: false }),
       supabase.from("complaints").select("*, clients(name,phone), cars(plate_number)").eq("status", "resolved").order("created_at", { ascending: false }),
+      supabase.from("maintenance_bookings").select("*, clients(name,phone)").gte("scheduled_at", fromStr).lte("scheduled_at", toStr).order("scheduled_at"),
     ]);
+    setTodayBookings(bookingsList.data ?? []);
     const lowPartsList = ((spareAll.data ?? []) as LowPart[]).filter((p) => (p.quantity ?? 0) <= (p.min_quantity ?? 0));
     setLowParts(lowPartsList);
     setComplaints((openCList.data as Complaint[]) ?? []);
@@ -128,51 +134,43 @@ function DashboardPage() {
       const doc = new jsPDF({ orientation: "landscape" });
       
       doc.setFontSize(22);
-      doc.setTextColor(63, 81, 181);
       doc.text("Automotive Aid - Professional Report", 14, 20);
       
       doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.text(`Period: ${format(dateRange.from, "PPP")} - ${format(dateRange.to, "PPP")}`, 14, 28);
+      doc.text(`Period: ${format(dateRange.from, "yyyy-MM-dd")} - ${format(dateRange.to, "yyyy-MM-dd")}`, 14, 28);
       doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 33);
 
       const tables = [
-        { id: "clients", name: "Registered Clients", columns: ["name", "phone", "email"] },
-        { id: "cars", name: "Vehicle Inventory", columns: ["plate_number", "vin", "color"] },
-        { id: "work_orders", name: "Service Work Orders", columns: ["status", "description", "created_at"] },
-        { id: "spare_parts", name: "Inventory Status", columns: ["name", "part_code", "quantity", "selling_price"] },
+        { id: "clients", name: "Clients", columns: ["name", "phone", "email"] },
+        { id: "cars", name: "Vehicles", columns: ["plate_number", "model", "brand"] },
+        { id: "work_orders", name: "Work Orders", columns: ["status", "description", "created_at"] },
+        { id: "spare_parts", name: "Inventory", columns: ["name", "part_code", "quantity"] },
       ];
 
       let yOffset = 45;
 
       for (const t of tables) {
-        const { data, error } = await supabase.from(t.id as any).select("*").limit(100);
+        const { data, error } = await supabase.from(t.id as any).select("*").limit(50);
         if (error || !data || data.length === 0) continue;
 
         if (yOffset > 160) { doc.addPage(); yOffset = 20; }
-
         doc.setFontSize(14);
-        doc.setTextColor(0);
         doc.text(t.name, 14, yOffset);
         
         (doc as any).autoTable({
           startY: yOffset + 5,
-          head: [t.columns.map(c => c.toUpperCase().replace("_", " "))],
+          head: [t.columns],
           body: data.map((row: any) => t.columns.map(col => String(row[col] || "-"))),
-          theme: "grid",
-          headStyles: { fillColor: [63, 81, 181], textColor: 255, fontStyle: "bold" },
-          styles: { fontSize: 9, cellPadding: 3 },
-          margin: { left: 14, right: 14 },
+          theme: "striped",
         });
-
-        yOffset = (doc as any).lastAutoTable.finalY + 20;
+        yOffset = (doc as any).lastAutoTable.finalY + 15;
       }
 
-      doc.save(`automotive-report-${format(new Date(), "yyyy-MM-dd-HHmm")}.pdf`);
-      toast.success("تم تصدير التقرير بنجاح");
+      doc.save(`report-${Date.now()}.pdf`);
+      toast.success("تم تصدير التقرير");
     } catch (err) {
       console.error(err);
-      toast.error("حدث خطأ أثناء تصدير PDF");
+      toast.error("حدث خطأ أثناء التصدير");
     }
   };
 
@@ -212,6 +210,15 @@ function DashboardPage() {
     };
     reader.readAsBinaryString(file);
   };
+
+  const chartData = [
+    { name: "السبت", bookings: 4, work_orders: 2 },
+    { name: "الأحد", bookings: 7, work_orders: 5 },
+    { name: "الاثنين", bookings: 5, work_orders: 8 },
+    { name: "الثلاثاء", bookings: 9, work_orders: 4 },
+    { name: "الأربعاء", bookings: 6, work_orders: 7 },
+    { name: "الخميس", bookings: 8, work_orders: 9 },
+  ];
 
   return (
     <div className="space-y-6">
@@ -265,7 +272,7 @@ function DashboardPage() {
           <Section title="الاستقبال" icon={Car}>
             <Stat label="إجمالي العملاء" value={stats.clients} />
             <Stat label="إجمالي السيارات" value={stats.cars} />
-            <Stat label="حجوزات اليوم" value={stats.bookings_today} accent="primary" onClick={() => navigate({ to: "/customer-service" })} />
+            <Stat label="الحجوزات المختارة" value={stats.bookings_today} accent="primary" onClick={() => setBookingsOpen(true)} />
           </Section>
 
           <Section title="خدمة العملاء" icon={AlertCircle}>
@@ -302,8 +309,74 @@ function DashboardPage() {
             <Stat label="عدد الموظفين" value={stats.employees} />
             <Stat label="الحاضرون اليوم" value={stats.attendance_today} accent="good" icon={Calendar} />
           </Section>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                <h3 className="font-bold">تحليل النشاط الأسبوعي</h3>
+              </div>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="bookings" name="الحجوزات" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="work_orders" name="أوامر الشغل" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <BarChart3 className="w-5 h-5 text-primary" />
+                <h3 className="font-bold">توزيع حالة العمليات</h3>
+              </div>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="work_orders" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          </div>
         </>
       )}
+
+      {/* Bookings dialog */}
+      <Dialog open={bookingsOpen} onOpenChange={setBookingsOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>تفاصيل الحجوزات المختارة ({todayBookings.length})</DialogTitle></DialogHeader>
+          {todayBookings.length === 0 ? (
+            <div className="text-center text-muted-foreground py-6">لا توجد حجوزات في هذه الفترة</div>
+          ) : (
+            <div className="grid gap-3">
+              {todayBookings.map((b) => (
+                <div key={b.id} className="border border-border rounded-lg p-4 flex items-center justify-between">
+                  <div>
+                    <div className="font-bold">{b.clients?.name || "عميل غير معروف"}</div>
+                    <div className="text-sm text-muted-foreground">{b.clients?.phone || "بدون هاتف"}</div>
+                    <div className="text-xs bg-accent px-2 py-0.5 rounded mt-2 inline-block">
+                      {new Date(b.scheduled_at).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-primary">{b.status === 'confirmed' ? 'مؤكد' : 'بانتظار التأكيد'}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Open complaints dialog */}
       <Dialog open={complaintsOpen} onOpenChange={setComplaintsOpen}>
